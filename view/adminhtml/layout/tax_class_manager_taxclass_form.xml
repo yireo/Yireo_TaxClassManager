@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:View/Layout:etc/page_configuration.xsd">
+    <update handle="loki_admin_components_form"/>
+
+    <body>
+        <referenceContainer name="content">
+            <block
+                name="yireo-tax-class-manager.form"
+                template="Loki_AdminComponents::form.phtml">
+                <arguments>
+                    <argument name="provider" xsi:type="string">Magento\Tax\Api\TaxClassRepositoryInterface</argument>
+                    <argument name="provider_handler" xsi:type="string">repository</argument>
+                    <argument name="resource_model" xsi:type="string">Magento\Tax\Model\ResourceModel\TaxClass</argument>
+                    <argument name="factory" xsi:type="string">Magento\Tax\Api\Data\TaxClassInterfaceFactory</argument>
+                    <argument name="index_url" xsi:type="string">tax_class_manager/taxclass/grid</argument>
+                    <argument name="acl_resource" xsi:type="string">Yireo_TaxClassManager::tax_class_save</argument>
+
+                    <argument name="button_actions" xsi:type="array">
+                        <item name="close" xsi:type="array">
+                            <item name="method" xsi:type="string">closeAction</item>
+                            <item name="label" xsi:type="string" translate="true">Back</item>
+                            <item name="cssClass" xsi:type="string">back</item>
+                        </item>
+                        <item name="saveAndClose" xsi:type="array">
+                            <item name="method" xsi:type="string">saveAndCloseAction</item>
+                            <item name="label" xsi:type="string" translate="true">Save &amp; Close</item>
+                            <item name="cssClass" xsi:type="string">save</item>
+                            <item name="primary" xsi:type="boolean">true</item>
+                        </item>
+                    </argument>
+
+                    <argument name="fields" xsi:type="array">
+                        <item name="class_id" xsi:type="array">
+                            <item name="label" xsi:type="string" translate="true">ID</item>
+                            <item name="field_type" xsi:type="string">view</item>
+                            <item name="sort_order" xsi:type="number">1</item>
+                        </item>
+                        <item name="class_name" xsi:type="array">
+                            <item name="label" xsi:type="string" translate="true">Name</item>
+                            <item name="field_type" xsi:type="string">input</item>
+                            <item name="required" xsi:type="boolean">true</item>
+                            <item name="sort_order" xsi:type="number">10</item>
+                        </item>
+                        <item name="class_type" xsi:type="array">
+                            <item name="label" xsi:type="string" translate="true">Type</item>
+                            <item name="field_type" xsi:type="string">select</item>
+                            <item name="options" xsi:type="object">Yireo\TaxClassManager\ViewModel\Options\ClassTypeOptions</item>
+                            <item name="empty_option" xsi:type="string" translate="true">-- Select a type --</item>
+                            <item name="required" xsi:type="boolean">true</item>
+                            <item name="sort_order" xsi:type="number">20</item>
+                        </item>
+                    </argument>
+                </arguments>
+            </block>
+        </referenceContainer>
+    </body>
+</page>

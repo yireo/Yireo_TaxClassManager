@@ -1,0 +1,16 @@
+<?php
+
+declare(strict_types=1);
+
+use Loki\Components\Factory\ViewModelFactory;
+use Magento\Framework\Escaper;
+use Magento\Framework\View\Element\Template;
+use Yireo\TaxClassManager\ViewModel\Options\ClassTypeOptions;
+
+/** @var Template $block */
+/** @var Escaper $escaper */
+/** @var ViewModelFactory $viewModelFactory */
+
+$classTypeOptions = $viewModelFactory->create(ClassTypeOptions::class);
+?>
+<span><?= $escaper->escapeHtml($classTypeOptions->getLabel((string)$block->getValue())) ?></span>

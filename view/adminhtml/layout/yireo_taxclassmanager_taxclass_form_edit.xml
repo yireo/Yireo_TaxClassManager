@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:View/Layout:etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="yireo-tax-class-manager.form">
+            <arguments>
+                <argument name="fields" xsi:type="array">
+                    <item name="class_type" xsi:type="array">
+                        <item name="field_type" xsi:type="string">view</item>
+                        <item name="required" xsi:type="boolean">false</item>
+                    </item>
+                </argument>
+
+                <argument name="button_actions" xsi:type="array">
+                    <item name="delete" xsi:type="array">
+                        <item name="method" xsi:type="string">deleteAction</item>
+                        <item name="label" xsi:type="string" translate="true">Delete</item>
+                        <item name="cssClass" xsi:type="string">delete</item>
+                    </item>
+                    <item name="saveAndContinue" xsi:type="array">
+                        <item name="method" xsi:type="string">saveAndContinueAction</item>
+                        <item name="label" xsi:type="string" translate="true">Save &amp; Continue</item>
+                        <item name="cssClass" xsi:type="string">save</item>
+                    </item>
+                </argument>
+            </arguments>
+        </referenceBlock>
+    </body>
+</page>

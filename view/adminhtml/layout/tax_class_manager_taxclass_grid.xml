@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:View/Layout:etc/page_configuration.xsd">
+    <update handle="loki_admin_components_grid"/>
+
+    <body>
+        <referenceContainer name="content">
+            <block
+                name="yireo-tax-class-manager.grid"
+                template="Loki_AdminComponents::grid.phtml">
+                <arguments>
+                    <argument name="namespace" xsi:type="string">yireo_tax_class_manager_listing</argument>
+                    <argument name="provider" xsi:type="string">Magento\Tax\Api\TaxClassRepositoryInterface</argument>
+                    <argument name="provider_handler" xsi:type="string">repository</argument>
+                    <argument name="resource_model" xsi:type="string">Magento\Tax\Model\ResourceModel\TaxClass</argument>
+                    <argument name="new_url" xsi:type="string">tax_class_manager/taxclass/form</argument>
+                    <argument name="edit_url" xsi:type="string">tax_class_manager/taxclass/form</argument>
+                    <argument name="acl_resource" xsi:type="string">Yireo_TaxClassManager::tax_class_view</argument>
+
+                    <argument name="searchable_fields" xsi:type="array">
+                        <item name="class_name" xsi:type="string">class_name</item>
+                    </argument>
+
+                    <argument name="button_actions" xsi:type="array">
+                        <item name="new" xsi:type="array">
+                            <item name="method" xsi:type="string">newAction</item>
+                            <item name="label" xsi:type="string" translate="true">Add New Tax Class</item>
+                            <item name="primary" xsi:type="boolean">true</item>
+                        </item>
+                    </argument>
+
+                    <argument name="grid_filters" xsi:type="array">
+                        <item name="class_type" xsi:type="array">
+                            <item name="label" xsi:type="string" translate="true">Type</item>
+                            <item name="field_type" xsi:type="string">select</item>
+                            <item name="condition_type" xsi:type="string">eq</item>
+                            <item name="options" xsi:type="object">Yireo\TaxClassManager\ViewModel\Options\ClassTypeOptions</item>
+                        </item>
+                    </argument>
+
+                    <argument name="mass_actions" xsi:type="array">
+                        <item name="delete" xsi:type="array">
+                            <item name="label" xsi:type="string" translate="true">Delete</item>
+                            <item name="url" xsi:type="string">tax_class_manager/taxclass/massDelete</item>
+                        </item>
+                    </argument>
+
+                    <argument name="row_actions" xsi:type="array">
+                        <item name="delete" xsi:type="array">
+                            <item name="label" xsi:type="string" translate="true">Delete</item>
+                            <item name="url" xsi:type="string">tax_class_manager/taxclass/delete</item>
+                        </item>
+                    </argument>
+
+                    <argument name="columns" xsi:type="array">
+                        <item name="class_id" xsi:type="array">
+                            <item name="label" xsi:type="string" translate="true">ID</item>
+                        </item>
+                        <item name="class_name" xsi:type="array">
+                            <item name="label" xsi:type="string" translate="true">Name</item>
+                        </item>
+                        <item name="class_type" xsi:type="array">
+                            <item name="label" xsi:type="string" translate="true">Type</item>
+                            <item name="cell_template" xsi:type="string">Yireo_TaxClassManager::grid/cell/class_type.phtml</item>
+                        </item>
+                    </argument>
+                </arguments>
+            </block>
+        </referenceContainer>
+    </body>
+</page>
