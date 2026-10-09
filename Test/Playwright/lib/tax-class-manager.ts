@@ -52,8 +52,16 @@ export async function gotoGrid(page: Page) {
     const menuLink = page.locator(`a[href*="${GRID_PATH}"]`).first();
     await expect(menuLink, 'Menu item "Tax Classes" not found').toBeAttached();
     await page.goto((await menuLink.getAttribute('href'))!);
+    await waitForGrid(page);
+}
+
+/**
+ * Wait until the grid is initialized by Alpine and is not loading anymore
+ */
+export async function waitForGrid(page: Page) {
     await expect(page.locator('table[data-role="grid"]')).toBeVisible();
     await waitForAlpineComponent(page, 'table[data-role="grid"]');
+    await expect(page.locator('.admin__data-grid-loading-mask').first()).toBeHidden();
 }
 
 export async function waitForForm(page: Page) {
@@ -62,7 +70,38 @@ export async function waitForForm(page: Page) {
 }
 
 export function waitForLokiPost(page: Page) {
-    return page.waitForResponse(response => response.url().includes(LOKI_POST_URL));
+    return page.waitForResponse(response => response.url().includes(LOKI_POST_URL), {timeout: 15_000});
+}
+
+/**
+ * Perform an action that makes the grid component post to the server and wait until the grid is updated
+ */
+export async function updateGrid(page: Page, action: () => Promise<void>) {
+    await waitForGrid(page);
+    const response = waitForLokiPost(page);
+    await action();
+    await response;
+    await waitForGrid(page);
+}
+
+export function getHeaders(page: Page): Locator {
+    return page.locator('table[data-role="grid"] thead th[data-column]');
+}
+
+/**
+ * Show or hide a grid column via the "Columns" selector; the choice is stored in the grid bookmark
+ */
+export async function setColumnActive(page: Page, columnName: string, active: boolean) {
+    await waitForGrid(page);
+    const checkbox = page.locator(`.admin__data-grid-action-columns input[data-column="${columnName}"]`).first();
+    if (await checkbox.isChecked() === active) {
+        return;
+    }
+
+    await page.locator('.admin__data-grid-action-columns').getByRole('button', {name: 'Columns'}).click();
+    await updateGrid(page, async () => {
+        await checkbox.click();
+    });
 }
 
 export function getRows(page: Page): Locator {
@@ -84,26 +123,29 @@ export async function getRowId(page: Page, name: string): Promise<string> {
  * Search the grid; an empty term resets the search (the search is stored in the admin session)
  */
 export async function searchGrid(page: Page, term: string) {
+    await waitForGrid(page);
     const searchField = page.locator('#grid-search');
     if (await searchField.inputValue() === term) {
         return;
     }
 
-    const response = waitForLokiPost(page);
-    await searchField.fill(term);
-    await searchField.dispatchEvent('change');
-    await response;
+    await updateGrid(page, async () => {
+        await searchField.fill(term);
+        await searchField.dispatchEvent('change');
+    });
+    await expect(page.locator('#grid-search')).toHaveValue(term);
 }
 
 export async function clearGridFilters(page: Page) {
+    await waitForGrid(page);
     const clearAll = page.getByRole('button', {name: 'Clear all'});
     if (await clearAll.count() === 0) {
         return;
     }
 
-    const response = waitForLokiPost(page);
-    await clearAll.evaluate((element: HTMLElement) => element.click());
-    await response;
+    await updateGrid(page, async () => {
+        await clearAll.evaluate((element: HTMLElement) => element.click());
+    });
 }
 
 export async function resetGrid(page: Page) {
@@ -118,8 +160,17 @@ export async function fillName(page: Page, name: string) {
     await nameField.dispatchEvent('change');
 }
 
+/**
+ * Find a page action button by its label; the accessible name may start with an icon font glyph (like " Back")
+ */
+export function getButton(page: Page, label: string): Locator {
+    const escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    return page.locator('.page-actions-buttons').getByRole('button', {name: new RegExp(`^\\W*${escapedLabel}$`)});
+}
+
 export async function clickButton(page: Page, label: string) {
-    await page.locator('.page-actions-buttons').getByRole('button', {name: label, exact: true}).click();
+    await getButton(page, label).click();
 }
 
 /**
@@ -134,7 +185,8 @@ export async function createTaxClass(page: Page, name: string, classType: 'CUSTO
     await page.locator('select[data-name="class_type"]').selectOption(classType);
     await clickButton(page, 'Save & Close');
 
-    await expect(page).toHaveURL(new RegExp(GRID_PATH));
+    await expect(page, `Saving tax class "${name}" failed`).toHaveURL(new RegExp(GRID_PATH), {timeout: 15_000});
+    await waitForGrid(page);
 }
 
 export async function openEditForm(page: Page, name: string) {
@@ -156,7 +208,7 @@ export async function deleteTaxClasses(page: Page, names: string[]) {
         const deleteLink = getRow(page, name).getByRole('link', {name: 'Delete'});
         if (await deleteLink.count() > 0) {
             await deleteLink.click();
-            await expect(page).toHaveURL(new RegExp(GRID_PATH));
+            await waitForGrid(page);
         }
     }
 

@@ -10,6 +10,8 @@ import {
     deleteTaxClasses,
     fillName,
     clickButton,
+    getButton,
+    waitForGrid,
     waitForForm,
     waitForLokiPost,
     uniqueName,
@@ -46,10 +48,9 @@ test.describe('Tax class form', function () {
         await expect(typeSelect).toHaveAttribute('required', '');
         await expect(typeSelect.locator('option')).toHaveText(['-- Select a type --', 'Customer', 'Product']);
 
-        const buttons = page.locator('.page-actions-buttons');
-        await expect(buttons.getByRole('button', {name: 'Save & Close', exact: true})).toBeVisible();
-        await expect(buttons.getByRole('button', {name: 'Delete', exact: true})).toHaveCount(0);
-        await expect(buttons.getByRole('button', {name: 'Save & Continue', exact: true})).toHaveCount(0);
+        await expect(getButton(page, 'Save & Close')).toBeVisible();
+        await expect(getButton(page, 'Delete')).toHaveCount(0);
+        await expect(getButton(page, 'Save & Continue')).toHaveCount(0);
     });
 
     test('does not save a tax class without a name', async function ({page}) {
@@ -81,9 +82,8 @@ test.describe('Tax class form', function () {
             await expect(page.locator('select[data-name="class_type"]')).toHaveCount(0);
             await expect(page.getByRole('main')).toContainText('PRODUCT');
 
-            const buttons = page.locator('.page-actions-buttons');
             for (const label of ['Back', 'Save & Close', 'Delete', 'Save & Continue']) {
-                await expect(buttons.getByRole('button', {name: label, exact: true})).toBeVisible();
+                await expect(getButton(page, label)).toBeVisible();
             }
         });
 
@@ -110,6 +110,7 @@ test.describe('Tax class form', function () {
             await clickButton(page, 'Back');
 
             await expect(page).toHaveURL(new RegExp(GRID_PATH));
+            await waitForGrid(page);
             await searchGrid(page, name);
             await expect(getRows(page)).toHaveCount(1);
             await expect(getRow(page, name + ' Unsaved')).toHaveCount(0);
