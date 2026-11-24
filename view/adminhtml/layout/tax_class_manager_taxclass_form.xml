@@ -14,6 +14,9 @@
                     <argument name="factory" xsi:type="string">Magento\Tax\Api\Data\TaxClassInterfaceFactory</argument>
                     <argument name="index_url" xsi:type="string">tax_class_manager/taxclass/grid</argument>
                     <argument name="acl_resource" xsi:type="string">Yireo_TaxClassManager::tax_class_save</argument>
+                    <argument name="save_acl_resource" xsi:type="string">Yireo_TaxClassManager::tax_class_save</argument>
+                    <argument name="delete_acl_resource" xsi:type="string">Yireo_TaxClassManager::tax_class_delete</argument>
+                    <argument name="item_convertor" xsi:type="object">Yireo\TaxClassManager\Form\ItemConvertor\TaxClassItemConvertor</argument>
 
                     <argument name="button_actions" xsi:type="array">
                         <item name="close" xsi:type="array">
