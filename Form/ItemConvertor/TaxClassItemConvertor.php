@@ -6,10 +6,21 @@ namespace Yireo\TaxClassManager\Form\ItemConvertor;
 
 use Loki\AdminComponents\Form\Item\ItemConvertorInterface;
 use Magento\Framework\DataObject;
-use Magento\Framework\Model\AbstractModel;
+use Magento\Tax\Model\ClassModelFactory;
+use Magento\Tax\Model\ResourceModel\TaxClass as TaxClassResource;
 
 class TaxClassItemConvertor implements ItemConvertorInterface
 {
+    /**
+     * @param ClassModelFactory $classModelFactory
+     * @param TaxClassResource $taxClassResource
+     */
+    public function __construct(
+        private readonly ClassModelFactory $classModelFactory,
+        private readonly TaxClassResource $taxClassResource
+    ) {
+    }
+
     /**
      * @param DataObject $item
      * @return DataObject
@@ -25,11 +36,18 @@ class TaxClassItemConvertor implements ItemConvertorInterface
      */
     public function beforeSave(DataObject $item): DataObject
     {
-        if (false === $item instanceof AbstractModel || empty($item->getOrigData('class_id'))) {
+        $taxClassId = (int)$item->getData('class_id');
+        if ($taxClassId < 1) {
             return $item;
         }
 
-        $item->setData('class_type', $item->getOrigData('class_type'));
+        $storedTaxClass = $this->classModelFactory->create();
+        $this->taxClassResource->load($storedTaxClass, $taxClassId);
+        if ((int)$storedTaxClass->getData('class_id') !== $taxClassId) {
+            return $item;
+        }
+
+        $item->setData('class_type', $storedTaxClass->getData('class_type'));
 
         return $item;
     }
