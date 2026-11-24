@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Yireo\TaxClassManager\Test\Integration\FixtureTrait;
 
+use Magento\Customer\Api\Data\GroupInterfaceFactory;
 use Magento\Customer\Api\GroupRepositoryInterface;
+use Magento\Framework\App\Config\MutableScopeConfigInterface;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Tax\Api\Data\TaxClassInterface;
 use Magento\Tax\Api\Data\TaxClassInterfaceFactory;
@@ -43,9 +46,25 @@ trait CreateTaxClass
      */
     private function getTaxClassIdInUse(): int
     {
-        $customerGroup = Bootstrap::getObjectManager()->get(GroupRepositoryInterface::class)->getById(1);
+        $taxClassId = (int)$this->createTaxClass()->getClassId();
 
-        return (int)$customerGroup->getTaxClassId();
+        $objectManager = Bootstrap::getObjectManager();
+        $customerGroup = $objectManager->get(GroupInterfaceFactory::class)->create();
+        $customerGroup->setCode('Integration Group ' . uniqid());
+        $customerGroup->setTaxClassId($taxClassId);
+        $objectManager->get(GroupRepositoryInterface::class)->save($customerGroup);
+
+        return $taxClassId;
+    }
+
+    private function setDefaultTaxClass(
+        string $configPath,
+        int $taxClassId,
+        string $scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT,
+        ?string $scopeCode = null
+    ): void {
+        Bootstrap::getObjectManager()->get(MutableScopeConfigInterface::class)
+            ->setValue($configPath, (string)$taxClassId, $scopeType, $scopeCode);
     }
 
     private function getTaxClassRepository(): TaxClassRepositoryInterface

@@ -3,6 +3,7 @@
     <module name="Yireo_TaxClassManager">
         <sequence>
             <module name="Magento_Backend"/>
+            <module name="Magento_Store"/>
             <module name="Magento_Tax"/>
             <module name="Loki_AdminComponents"/>
             <module name="Loki_Base"/>

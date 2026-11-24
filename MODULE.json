@@ -3,6 +3,7 @@
     "composer_name": "yireo/magento2-tax-class-manager",
     "sequence": [
         "Magento_Backend",
+        "Magento_Store",
         "Magento_Tax",
         "Loki_AdminComponents",
         "Loki_Base",

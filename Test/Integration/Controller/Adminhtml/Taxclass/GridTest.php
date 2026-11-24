@@ -4,14 +4,19 @@ declare(strict_types=1);
 
 namespace Yireo\TaxClassManager\Test\Integration\Controller\Adminhtml\Taxclass;
 
+use Loki\AdminComponents\Acl\ActionAuthorization;
 use Loki\AdminComponents\Grid\BookmarkLoader;
+use Magento\Framework\Acl\Builder as AclBuilder;
+use Magento\Framework\View\LayoutInterface;
 use Magento\Tax\Api\TaxClassManagementInterface;
 use Magento\TestFramework\Fixture\AppArea;
+use Magento\TestFramework\Fixture\AppIsolation;
 use Magento\TestFramework\Fixture\DbIsolation;
 use Magento\TestFramework\TestCase\AbstractBackendController;
 use Yireo\TaxClassManager\Test\Integration\FixtureTrait\CreateTaxClass;
 
 #[DbIsolation(true)]
+#[AppIsolation(true)]
 #[AppArea('adminhtml')]
 final class GridTest extends AbstractBackendController
 {
@@ -61,6 +66,71 @@ final class GridTest extends AbstractBackendController
 
         $productRow = $this->getRowHtml($body, $productClass->getClassName());
         $this->assertStringContainsString('<span>Product</span>', $productRow);
+    }
+
+    public function testRowDeleteActionPostsWithConfirmation(): void
+    {
+        $taxClass = $this->createTaxClass();
+
+        $this->dispatch($this->uri);
+        $row = $this->getRowHtml((string)$this->getResponse()->getBody(), $taxClass->getClassName());
+
+        $this->assertMatchesRegularExpression(
+            '#<a\s+href="\#"\s+data-url="[^"]+tax_class_manager/taxclass/delete/id/' . $taxClass->getClassId()
+            . '/[^"]*"\s+data-confirm="Are you sure you want to delete this tax class\?"\s+'
+            . '@click.prevent="postAction">#',
+            $row
+        );
+        $this->assertStringNotContainsString('<a href="http', $this->getDeleteLinkHtml($row));
+    }
+
+    public function testDeleteActionsAreHiddenWithoutDeletePermission(): void
+    {
+        $taxClass = $this->createTaxClass();
+        $this->denyResource('Yireo_TaxClassManager::tax_class_delete');
+
+        $this->dispatch($this->uri);
+        $body = (string)$this->getResponse()->getBody();
+
+        $this->assertStringNotContainsString('tax_class_manager/taxclass/massDelete', $body);
+        $this->assertStringNotContainsString(
+            'tax_class_manager/taxclass/delete',
+            $this->getRowHtml($body, $taxClass->getClassName())
+        );
+        $this->assertFalse($this->isGridActionAllowed('delete'));
+        $this->assertTrue($this->isGridActionAllowed('inline_edit'));
+    }
+
+    public function testSaveActionsAreRefusedWithoutSavePermission(): void
+    {
+        $this->denyResource('Yireo_TaxClassManager::tax_class_save');
+
+        $this->dispatch($this->uri);
+
+        $this->assertStringNotContainsString('Add New Tax Class', (string)$this->getResponse()->getBody());
+        $this->assertFalse($this->isGridActionAllowed('inline_edit'));
+        $this->assertTrue($this->isGridActionAllowed('delete'));
+    }
+
+    private function isGridActionAllowed(string $action): bool
+    {
+        $block = $this->_objectManager->get(LayoutInterface::class)->getBlock('yireo-tax-class-manager.grid');
+        $this->assertNotFalse($block, 'Grid block not found in layout');
+
+        return $this->_objectManager->get(ActionAuthorization::class)->isAllowed($block, $action);
+    }
+
+    private function denyResource(string $resource): void
+    {
+        $this->_objectManager->get(AclBuilder::class)->getAcl()->deny($this->_auth->getUser()->getRoles(), $resource);
+    }
+
+    private function getDeleteLinkHtml(string $row): string
+    {
+        preg_match('#<a[^>]*>\s*Delete\s*</a>#s', $row, $match);
+        $this->assertNotEmpty($match, 'No delete link found');
+
+        return $match[0];
     }
 
     /**
