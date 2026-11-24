@@ -15,6 +15,8 @@
                     <argument name="new_url" xsi:type="string">tax_class_manager/taxclass/form</argument>
                     <argument name="edit_url" xsi:type="string">tax_class_manager/taxclass/form</argument>
                     <argument name="acl_resource" xsi:type="string">Yireo_TaxClassManager::tax_class_view</argument>
+                    <argument name="save_acl_resource" xsi:type="string">Yireo_TaxClassManager::tax_class_save</argument>
+                    <argument name="delete_acl_resource" xsi:type="string">Yireo_TaxClassManager::tax_class_delete</argument>
 
                     <argument name="searchable_fields" xsi:type="array">
                         <item name="class_name" xsi:type="string">class_name</item>
@@ -41,6 +43,7 @@
                         <item name="delete" xsi:type="array">
                             <item name="label" xsi:type="string" translate="true">Delete</item>
                             <item name="url" xsi:type="string">tax_class_manager/taxclass/massDelete</item>
+                            <item name="acl_resource" xsi:type="string">Yireo_TaxClassManager::tax_class_delete</item>
                         </item>
                     </argument>
 
@@ -48,6 +51,9 @@
                         <item name="delete" xsi:type="array">
                             <item name="label" xsi:type="string" translate="true">Delete</item>
                             <item name="url" xsi:type="string">tax_class_manager/taxclass/delete</item>
+                            <item name="post" xsi:type="boolean">true</item>
+                            <item name="confirm" xsi:type="string" translate="true">Are you sure you want to delete this tax class?</item>
+                            <item name="acl_resource" xsi:type="string">Yireo_TaxClassManager::tax_class_delete</item>
                         </item>
                     </argument>
 
