@@ -5,29 +5,56 @@ declare(strict_types=1);
 namespace Yireo\TaxClassManager\Test\Unit\Controller\Adminhtml\Taxclass;
 
 use Exception;
+use Magento\Framework\App\Action\HttpGetActionInterface;
+use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Phrase;
 use Magento\Tax\Api\TaxClassRepositoryInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\LoggerInterface;
+use Yireo\TaxClassManager\Service\DefaultTaxClassGuard;
 use Yireo\TaxClassManager\Controller\Adminhtml\Taxclass\Delete;
 
 final class DeleteTest extends AbstractControllerTestCase
 {
     private TaxClassRepositoryInterface&MockObject $taxClassRepository;
     private LoggerInterface&MockObject $logger;
+    private DefaultTaxClassGuard&MockObject $defaultTaxClassGuard;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->taxClassRepository = $this->createMock(TaxClassRepositoryInterface::class);
         $this->logger = $this->createMock(LoggerInterface::class);
+        $this->defaultTaxClassGuard = $this->createMock(DefaultTaxClassGuard::class);
     }
 
     public function testAdminResource(): void
     {
         $this->assertSame('Yireo_TaxClassManager::tax_class_delete', Delete::ADMIN_RESOURCE);
+    }
+
+    public function testOnlyPostRequestsAreAccepted(): void
+    {
+        $controller = $this->createController();
+
+        $this->assertInstanceOf(HttpPostActionInterface::class, $controller);
+        $this->assertNotInstanceOf(HttpGetActionInterface::class, $controller);
+    }
+
+    public function testDefaultTaxClassIsNotDeleted(): void
+    {
+        $this->requestParams = ['id' => '2'];
+        $this->defaultTaxClassGuard->method('assertCanBeDeleted')->with(2)
+            ->willThrowException(new LocalizedException(new Phrase('Used as default.')));
+        $this->taxClassRepository->expects($this->never())->method('deleteById');
+
+        $this->createController()->execute();
+
+        $this->assertSame(['Used as default.'], $this->errorMessages);
+        $this->assertSame([], $this->successMessages);
+        $this->assertRedirectedToGrid();
     }
 
     #[DataProvider('invalidIdProvider')]
@@ -110,6 +137,6 @@ final class DeleteTest extends AbstractControllerTestCase
 
     private function createController(): Delete
     {
-        return new Delete($this->context, $this->taxClassRepository, $this->logger);
+        return new Delete($this->context, $this->taxClassRepository, $this->logger, $this->defaultTaxClassGuard);
     }
 }

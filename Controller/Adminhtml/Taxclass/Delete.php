@@ -7,14 +7,14 @@ namespace Yireo\TaxClassManager\Controller\Adminhtml\Taxclass;
 use Exception;
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
-use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\Controller\Result\Redirect;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Tax\Api\TaxClassRepositoryInterface;
 use Psr\Log\LoggerInterface;
+use Yireo\TaxClassManager\Service\DefaultTaxClassGuard;
 
-class Delete extends Action implements HttpGetActionInterface, HttpPostActionInterface
+class Delete extends Action implements HttpPostActionInterface
 {
     public const ADMIN_RESOURCE = 'Yireo_TaxClassManager::tax_class_delete';
 
@@ -22,11 +22,13 @@ class Delete extends Action implements HttpGetActionInterface, HttpPostActionInt
      * @param Context $context
      * @param TaxClassRepositoryInterface $taxClassRepository
      * @param LoggerInterface $logger
+     * @param DefaultTaxClassGuard $defaultTaxClassGuard
      */
     public function __construct(
         Context $context,
         private readonly TaxClassRepositoryInterface $taxClassRepository,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly DefaultTaxClassGuard $defaultTaxClassGuard
     ) {
         parent::__construct($context);
     }
@@ -46,6 +48,7 @@ class Delete extends Action implements HttpGetActionInterface, HttpPostActionInt
         }
 
         try {
+            $this->defaultTaxClassGuard->assertCanBeDeleted($id);
             if ($this->taxClassRepository->deleteById($id)) {
                 $this->messageManager->addSuccessMessage(__('The tax class has been deleted.'));
                 return $resultRedirect;

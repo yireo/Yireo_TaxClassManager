@@ -198,6 +198,18 @@ export async function openEditForm(page: Page, name: string) {
 }
 
 /**
+ * Click the Delete row action of a tax class and answer its confirmation dialog
+ */
+export async function clickRowDelete(page: Page, name: string, accept: boolean = true) {
+    page.once('dialog', async dialog => {
+        expect(dialog.message()).toBe('Are you sure you want to delete this tax class?');
+        accept ? await dialog.accept() : await dialog.dismiss();
+    });
+
+    await getRow(page, name).getByRole('link', {name: 'Delete'}).click();
+}
+
+/**
  * Remove tax classes that were created by a test, ignoring classes that are already gone
  */
 export async function deleteTaxClasses(page: Page, names: string[]) {
@@ -207,7 +219,10 @@ export async function deleteTaxClasses(page: Page, names: string[]) {
 
         const deleteLink = getRow(page, name).getByRole('link', {name: 'Delete'});
         if (await deleteLink.count() > 0) {
-            await deleteLink.click();
+            const deleteResponse = page.waitForResponse(response => response.url().includes('taxclass/delete'));
+            await clickRowDelete(page, name);
+            await deleteResponse;
+            await page.waitForLoadState('load');
             await waitForGrid(page);
         }
     }

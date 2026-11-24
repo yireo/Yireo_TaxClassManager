@@ -10,6 +10,7 @@ import {
     createTaxClass,
     openEditForm,
     deleteTaxClasses,
+    clickRowDelete,
     clickButton,
     expectMessage,
     uniqueName,
@@ -29,11 +30,28 @@ test.describe('Deleting tax classes', function () {
         await createTaxClass(page, name, 'CUSTOMER');
 
         await searchGrid(page, name);
-        await getRow(page, name).getByRole('link', {name: 'Delete'}).click();
+        const deleteRequest = page.waitForRequest(request => request.url().includes('taxclass/delete'));
+        await clickRowDelete(page, name);
+
+        const request = await deleteRequest;
+        expect(request.method()).toBe('POST');
+        expect(request.postData()).toContain('form_key=');
 
         await expect(page).toHaveURL(new RegExp(GRID_PATH));
         await expectMessage(page, 'success', 'The tax class has been deleted.');
         await expect(getRow(page, name)).toHaveCount(0);
+    });
+
+    test('keeps a tax class when the row delete is not confirmed', async function ({page}) {
+        const name = uniqueName('PW Row Delete Cancel');
+        createdNames.push(name);
+        await createTaxClass(page, name, 'CUSTOMER');
+
+        await searchGrid(page, name);
+        await clickRowDelete(page, name, false);
+
+        await expect(page).toHaveURL(new RegExp(GRID_PATH));
+        await expect(getRow(page, name)).toHaveCount(1);
     });
 
     test('deletes a tax class from the edit form', async function ({page}) {
@@ -80,10 +98,10 @@ test.describe('Deleting tax classes', function () {
         await searchGrid(page, 'Retail Customer');
         const rowId = await getRowId(page, 'Retail Customer');
 
-        await getRow(page, 'Retail Customer').getByRole('link', {name: 'Delete'}).click();
+        await clickRowDelete(page, 'Retail Customer');
 
         await expect(page).toHaveURL(new RegExp(GRID_PATH));
-        // Depending on the shop, Magento refuses because of tax rules or customer groups using the class
+        // Retail Customer is the default customer tax class; Magento also refuses because of tax rules or customer groups
         await expectMessage(page, 'error', /You cannot delete this tax class because it is used in/);
 
         await searchGrid(page, 'Retail Customer');
