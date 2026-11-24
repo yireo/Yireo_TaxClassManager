@@ -7,11 +7,13 @@ namespace Yireo\TaxClassManager\Test\Integration\Controller\Adminhtml\Taxclass;
 use Magento\Framework\App\Request\Http as HttpRequest;
 use Magento\Framework\Message\MessageInterface;
 use Magento\Tax\Api\TaxClassManagementInterface;
+use Magento\TestFramework\Fixture\AppIsolation;
 use Magento\TestFramework\Fixture\DbIsolation;
 use Magento\TestFramework\TestCase\AbstractBackendController;
 use Yireo\TaxClassManager\Test\Integration\FixtureTrait\CreateTaxClass;
 
 #[DbIsolation(true)]
+#[AppIsolation(true)]
 final class MassDeleteTest extends AbstractBackendController
 {
     use CreateTaxClass;

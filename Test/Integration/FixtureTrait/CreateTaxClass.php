@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Yireo\TaxClassManager\Test\Integration\FixtureTrait;
 
-use Magento\Customer\Api\Data\GroupInterfaceFactory;
 use Magento\Customer\Api\GroupRepositoryInterface;
 use Magento\Framework\App\Config\MutableScopeConfigInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Store\Model\ScopeInterface;
+use Magento\Store\Model\StoreManagerInterface;
 use Magento\Tax\Api\Data\TaxClassInterface;
 use Magento\Tax\Api\Data\TaxClassInterfaceFactory;
 use Magento\Tax\Api\TaxClassManagementInterface;
@@ -42,19 +43,28 @@ trait CreateTaxClass
     }
 
     /**
-     * Return the ID of a tax class that Magento refuses to delete, because a customer group uses it
+     * Return the ID of a tax class that Magento refuses to delete, because a customer group uses it; another tax
+     * class becomes the default customer tax class, so that only the Magento check applies
      */
     private function getTaxClassIdInUse(): int
     {
-        $taxClassId = (int)$this->createTaxClass()->getClassId();
-
         $objectManager = Bootstrap::getObjectManager();
-        $customerGroup = $objectManager->get(GroupInterfaceFactory::class)->create();
-        $customerGroup->setCode('Integration Group ' . uniqid());
-        $customerGroup->setTaxClassId($taxClassId);
-        $objectManager->get(GroupRepositoryInterface::class)->save($customerGroup);
+        $customerGroup = $objectManager->get(GroupRepositoryInterface::class)->getById(1);
 
-        return $taxClassId;
+        $configPath = 'tax/classes/default_customer_tax_class';
+        $otherTaxClassId = (int)$this->createTaxClass()->getClassId();
+        $this->setDefaultTaxClass($configPath, $otherTaxClassId);
+
+        $storeManager = $objectManager->get(StoreManagerInterface::class);
+        foreach ($storeManager->getWebsites() as $website) {
+            $this->setDefaultTaxClass($configPath, $otherTaxClassId, ScopeInterface::SCOPE_WEBSITES, $website->getCode());
+        }
+
+        foreach ($storeManager->getStores() as $store) {
+            $this->setDefaultTaxClass($configPath, $otherTaxClassId, ScopeInterface::SCOPE_STORES, $store->getCode());
+        }
+
+        return (int)$customerGroup->getTaxClassId();
     }
 
     private function setDefaultTaxClass(

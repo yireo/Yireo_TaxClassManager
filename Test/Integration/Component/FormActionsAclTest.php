@@ -31,6 +31,16 @@ final class FormActionsAclTest extends AbstractBackendController
 
     protected $uri = 'backend/loki_components/index/html';
 
+    public function testAclHasAccess(): void
+    {
+        $this->markTestSkipped('Access is covered by the form action tests, which post a signed Loki payload');
+    }
+
+    public function testAclNoAccess(): void
+    {
+        $this->markTestSkipped('Access is covered by the form action tests, which post a signed Loki payload');
+    }
+
     public function testDeleteActionDeletesTaxClass(): void
     {
         $taxClassId = (int)$this->createTaxClass()->getClassId();

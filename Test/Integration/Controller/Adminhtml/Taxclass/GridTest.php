@@ -74,6 +74,7 @@ final class GridTest extends AbstractBackendController
 
         $this->dispatch($this->uri);
         $row = $this->getRowHtml((string)$this->getResponse()->getBody(), $taxClass->getClassName());
+        $row = html_entity_decode($row, ENT_QUOTES | ENT_HTML5);
 
         $this->assertMatchesRegularExpression(
             '#<a\s+href="\#"\s+data-url="[^"]+tax_class_manager/taxclass/delete/id/' . $taxClass->getClassId()
