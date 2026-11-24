@@ -24,3 +24,6 @@
 "Back","Back"
 "Save & Close","Save & Close"
 "Save & Continue","Save & Continue"
+"Please select at most %1 tax classes to delete at once.","Please select at most %1 tax classes to delete at once."
+"You cannot delete this tax class because it is used in the tax configuration as a default tax class. Choose another default tax class first.","You cannot delete this tax class because it is used in the tax configuration as a default tax class. Choose another default tax class first."
+"Are you sure you want to delete this tax class?","Are you sure you want to delete this tax class?"

@@ -11,18 +11,21 @@ use Magento\Tax\Api\TaxClassRepositoryInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\LoggerInterface;
+use Yireo\TaxClassManager\Service\DefaultTaxClassGuard;
 use Yireo\TaxClassManager\Controller\Adminhtml\Taxclass\MassDelete;
 
 final class MassDeleteTest extends AbstractControllerTestCase
 {
     private TaxClassRepositoryInterface&MockObject $taxClassRepository;
     private LoggerInterface&MockObject $logger;
+    private DefaultTaxClassGuard&MockObject $defaultTaxClassGuard;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->taxClassRepository = $this->createMock(TaxClassRepositoryInterface::class);
         $this->logger = $this->createMock(LoggerInterface::class);
+        $this->defaultTaxClassGuard = $this->createMock(DefaultTaxClassGuard::class);
     }
 
     public function testAdminResource(): void
@@ -71,6 +74,63 @@ final class MassDeleteTest extends AbstractControllerTestCase
         $this->assertSame(['3 tax class(es) have been deleted.'], $this->successMessages);
         $this->assertSame([], $this->errorMessages);
         $this->assertRedirectedToGrid();
+    }
+
+    public function testDuplicateIdsAreDeletedOnce(): void
+    {
+        $this->requestParams = ['selected' => ['3', '3', '03', '5']];
+        $deletedIds = [];
+        $this->taxClassRepository->method('deleteById')
+            ->willReturnCallback(function ($id) use (&$deletedIds) {
+                $deletedIds[] = $id;
+                return true;
+            });
+
+        $this->createController()->execute();
+
+        $this->assertSame([3, 5], $deletedIds);
+        $this->assertSame(['2 tax class(es) have been deleted.'], $this->successMessages);
+    }
+
+    public function testTooManyIdsAreRefused(): void
+    {
+        $this->requestParams = ['selected' => range(1, MassDelete::MAX_IDS + 1)];
+        $this->taxClassRepository->expects($this->never())->method('deleteById');
+
+        $this->createController()->execute();
+
+        $this->assertSame(['Please select at most 500 tax classes to delete at once.'], $this->errorMessages);
+        $this->assertSame([], $this->successMessages);
+        $this->assertRedirectedToGrid();
+    }
+
+    public function testMaximumNumberOfIdsIsAccepted(): void
+    {
+        $this->requestParams = ['selected' => range(1, MassDelete::MAX_IDS)];
+        $this->taxClassRepository->expects($this->exactly(MassDelete::MAX_IDS))->method('deleteById')
+            ->willReturn(true);
+
+        $this->createController()->execute();
+
+        $this->assertSame(['500 tax class(es) have been deleted.'], $this->successMessages);
+    }
+
+    public function testDefaultTaxClassIsReportedWhileOthersAreDeleted(): void
+    {
+        $this->requestParams = ['selected' => ['2', '5']];
+        $this->defaultTaxClassGuard->method('assertCanBeDeleted')->willReturnCallback(
+            function (int $id) {
+                if ($id === 2) {
+                    throw new LocalizedException(new Phrase('Used as default.'));
+                }
+            }
+        );
+        $this->taxClassRepository->expects($this->once())->method('deleteById')->with(5)->willReturn(true);
+
+        $this->createController()->execute();
+
+        $this->assertSame(['Tax class 2: Used as default.'], $this->errorMessages);
+        $this->assertSame(['1 tax class(es) have been deleted.'], $this->successMessages);
     }
 
     public function testSelectAllMarkerIsIgnored(): void
@@ -150,6 +210,6 @@ final class MassDeleteTest extends AbstractControllerTestCase
 
     private function createController(): MassDelete
     {
-        return new MassDelete($this->context, $this->taxClassRepository, $this->logger);
+        return new MassDelete($this->context, $this->taxClassRepository, $this->logger, $this->defaultTaxClassGuard);
     }
 }

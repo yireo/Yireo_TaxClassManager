@@ -64,6 +64,29 @@ final class MassDeleteTest extends AbstractBackendController
         $this->assertTrue($this->taxClassExists($classIdInUse));
     }
 
+    public function testDefaultTaxClassIsReportedWhileOthersAreDeleted(): void
+    {
+        $deletableClassId = (int)$this->createTaxClass()->getClassId();
+        $defaultClassId = (int)$this->createTaxClass()->getClassId();
+        $this->setDefaultTaxClass('tax/classes/default_customer_tax_class', $defaultClassId, 'stores', 'default');
+
+        $this->dispatchWithSelection([$deletableClassId, $defaultClassId, $deletableClassId]);
+
+        $this->assertSessionMessages(
+            $this->equalTo(['1 tax class(es) have been deleted.']),
+            MessageInterface::TYPE_SUCCESS
+        );
+        $this->assertSessionMessages(
+            $this->equalTo([
+                'Tax class ' . $defaultClassId . ': You cannot delete this tax class because it is used in the'
+                . ' tax configuration as a default tax class. Choose another default tax class first.',
+            ]),
+            MessageInterface::TYPE_ERROR
+        );
+        $this->assertFalse($this->taxClassExists($deletableClassId));
+        $this->assertTrue($this->taxClassExists($defaultClassId));
+    }
+
     public function testEmptySelectionShowsError(): void
     {
         $this->dispatchWithSelection([]);
