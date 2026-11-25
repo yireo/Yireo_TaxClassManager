@@ -9,5 +9,7 @@
         "Loki_Base",
         "Loki_Components",
         "Loki_CssUtils"
-    ]
+    ],
+    "phpcs_severity": "6",
+    "phpstan_level": "1"
 }
