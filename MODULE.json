@@ -6,9 +6,7 @@
         "Magento_Store",
         "Magento_Tax",
         "Loki_AdminComponents",
-        "Loki_Base",
-        "Loki_Components",
-        "Loki_CssUtils"
+        "Loki_Components"
     ],
     "phpcs_severity": "6",
     "phpstan_level": "1"
