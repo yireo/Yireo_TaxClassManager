@@ -2,12 +2,61 @@
     "module_name": "Yireo_TaxClassManager",
     "composer_name": "yireo/magento2-tax-class-manager",
     "sequence": [
+        "Loki_AdminComponents",
+        "Loki_Components",
         "Magento_Backend",
         "Magento_Store",
-        "Magento_Tax",
-        "Loki_AdminComponents",
-        "Loki_Components"
+        "Magento_Tax"
     ],
     "phpcs_severity": "6",
-    "phpstan_level": "1"
+    "phpstan_level": "1",
+    "php_versions": [
+        "8.1",
+        "8.2",
+        "8.3",
+        "8.4"
+    ],
+    "skip_magento_versions": [],
+    "skip_css_utils": false,
+    "modules": [
+        "Loki_AdminComponents",
+        "Loki_Base",
+        "Loki_Components",
+        "Loki_CssUtils",
+        "Magento_AdminNotification",
+        "Magento_Backend",
+        "Magento_Catalog",
+        "Magento_CatalogInventory",
+        "Magento_Checkout",
+        "Magento_Cms",
+        "Magento_Config",
+        "Magento_Csp",
+        "Magento_Customer",
+        "Magento_Directory",
+        "Magento_Eav",
+        "Magento_Indexer",
+        "Magento_MediaGalleryUiApi",
+        "Magento_Payment",
+        "Magento_Quote",
+        "Magento_Rule",
+        "Magento_Sales",
+        "Magento_SalesSequence",
+        "Magento_Store",
+        "Magento_Tax",
+        "Magento_Theme",
+        "Magento_Ui",
+        "Magento_User",
+        "Magento_Variable",
+        "Yireo_CspUtilities"
+    ],
+    "components": [
+        "yireo-tax-class-manager.form",
+        "yireo-tax-class-manager.grid"
+    ],
+    "config": [],
+    "tests": {
+        "unit": 40,
+        "integration": 36,
+        "functional": 17
+    }
 }
